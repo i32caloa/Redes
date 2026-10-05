@@ -58,6 +58,12 @@ int main(){
         exit(EXIT_FAILURE);
 
     }
+
+    printf("Servidor escuchando en el puerto %d", PUERTO);
+
+    while(1){
+        
+    }
     
 
     return 0;
