@@ -1,0 +1,50 @@
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <signal.h>
+#include <time.h>
+#include <arpa/inet.h>
+
+int main(){
+
+    int sd;
+    struct sockaddr_in socketCliente;
+    char buffer[100];
+    socklen_t len_socket;
+    int fin = 0;
+
+    sd = socket(AF_INET, SOCK_STREAM, 0);
+    if(sd == -1){
+
+        perror("Error al abrir el socket cliente\n");
+        exit(EXIT_FAILURE);
+
+    }
+
+    socketCliente.sin_family = AF_INET;
+    socketCliente.sin_port = htons(2000);
+    socketCliente.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+    len_socket = sizeof(socketCliente);
+
+    if(connect(sd, (struct sockaddr *)&socketCliente, len_socket) == -1){
+        
+        perror("Error de conexión\n");
+        exit(EXIT_FAILURE);
+
+    }
+
+    printf("Conectado con el servidor\n");
+
+    
+
+
+    exit(EXIT_SUCCESS);
+
+}
