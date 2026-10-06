@@ -11,7 +11,7 @@
 #include <time.h>
 #include <arpa/inet.h>
 
-#define MAX_CLIENTS 50
+#define MAX_CLIENTS 10
 #define PUERTO 2026
 
 int main(){
@@ -21,6 +21,7 @@ int main(){
     socklen_t from_len;
 
     int clientes[MAX_CLIENTS];
+
     fd_set readfds;
     int max_sd, activity;
     char buffer[250];
@@ -52,6 +53,8 @@ int main(){
 
     }
 
+    //hablita socket
+
     if(listen(sd, 10) == -1){
 
         perror("Error en listen\n");
@@ -63,8 +66,86 @@ int main(){
 
     while(1){
         
+        FD_ZERO(&readfds);
+        FD_SET(sd, &readfds);
+        
+        max_sd = sd;
+
+        for(int i = 0; i < MAX_CLIENTS; i++){
+
+            int sdCliente = clientes[i];
+
+            if(sdCliente > 0){
+
+                FD_SET(sdCliente, &readfds);
+
+            }
+
+            if(sdCliente > max_sd){
+
+                max_sd = sdCliente;
+
+            }
+        }
+
+        activity = select(max_sd + 1, &readfds, NULL, NULL, NULL);
+
+        if((activity < 0)){
+
+            perror("Error en select\n");
+
+        }
+
+        if(FD_ISSET(sd, &readfds)){
+
+            from_len = sizeof(from);
+
+            if((new_sd = accept(sd, (struct sockaddr*)&from, &from_len)) == -1){
+
+                perror("Error accept\n");
+                exit(EXIT_FAILURE);
+
+            }
+
+            for(int i = 0; i < MAX_CLIENTS; i++){
+                
+                if(clientes[i] == 0){
+
+                    clientes[i] == new_sd;
+                    printf("Cliente %d conectado\n", i);
+
+                    char *mensaje = "Usuario conectado\n";
+                    send(new_sd, mensaje, strlen(mensaje), 0);
+                    break;
+
+                }
+            }
+        }
+
+        for(int i = 0; i < MAX_CLIENTS; i++){
+
+            int sdCliente = clientes[i];
+
+            if(sdCliente > 0 && FD_ISSET(sdCliente, &readfds)){
+
+                bzero(buffer, sizeof(buffer));
+
+                int lectura = recv(sdCliente, buffer, sizeof(buffer), 0);
+
+                if(lectura == 0){
+
+                    printf("Cliente %d desconectado\n", i);
+                    close(sdCliente);
+                    clientes[i] == 0;
+
+                } else {
+
+                    printf("Mensaje del cliente %d: %s\n", i, buffer);
+
+                }
+            }
+        }
     }
-    
 
     return 0;
 }
