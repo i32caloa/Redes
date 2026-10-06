@@ -50,6 +50,11 @@ int main(){
     sockServidor.sin_port = htons(PUERTO);
     sockServidor.sin_addr.s_addr = inet_addr("127.0.0.1");
 
+    //añadido ya que el puerto se quedaba activo cada vez q se usaba y habia q limpiarlo, esto hace que libere acada vez q el porgra,a se cierre
+
+    int opt = 1;
+    setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+
     if(bind(sd, (struct sockaddr *)&sockServidor, sizeof(sockServidor)) == -1){
         
         perror("Error en bind\n");
@@ -66,7 +71,7 @@ int main(){
 
     }
 
-    printf("Servidor escuchando en el puerto %d", PUERTO);
+    printf("Servidor escuchando en el puerto %d\n", PUERTO);
 
     while(1){
         
@@ -150,7 +155,7 @@ int main(){
                     buffer[strcspn(buffer, "\r\n")] = 0;
                     printf("Mensaje del cliente %d: %s\n", i, buffer);
 
-                    if(strncmp(buffer, "USUARIO", 8) == 0){
+                    if(strncmp(buffer, "USUARIO ", 8) == 0){
 
                         if(estadoClientes[i] == 0){
 
@@ -165,11 +170,11 @@ int main(){
                             send(sdCliente, respuesta, strlen(respuesta), 0);
 
                         }
-                    } else if(strncmp(buffer, "PASSWORD", 9) == 0){
+                    } else if(strncmp(buffer, "PASSWORD ", 9) == 0){
 
                         if(estadoClientes[i] == 1){
 
-                            estadoClientes[i] == 2;
+                            estadoClientes[i] = 2;
                             char *respuesta = "[OK] Usuario validado\n";
                             send(sdCliente, respuesta, strlen(respuesta), 0);
 
