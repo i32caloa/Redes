@@ -17,10 +17,12 @@
 int main(){
 
     int sd, new_sd;
-    struct sockaddr_in sockCliente, from;
+    struct sockaddr_in sockServidor, from;
     socklen_t from_len;
 
     int clientes[MAX_CLIENTS];
+    int estadoClientes[MAX_CLIENTS];
+    char nombreClientes[MAX_CLIENTS][50];
 
     fd_set readfds;
     int max_sd, activity;
@@ -30,6 +32,8 @@ int main(){
 
     for(int i = 0; i < MAX_CLIENTS; i++){
         clientes[i] = 0;
+        estadoClientes[i] = 0;
+        bzero(nombreClientes[i], 50);
     }
 
     //abrir socket
@@ -42,11 +46,11 @@ int main(){
 
     //campos de la estructura, IP siempre 127.0.0.1 ya que es nuestra maquina con linux
 
-    sockCliente.sin_family = AF_INET;
-    sockCliente.sin_port = htons(PUERTO);
-    sockCliente.sin_addr.s_addr = inet_addr("127.0.0.1");
+    sockServidor.sin_family = AF_INET;
+    sockServidor.sin_port = htons(PUERTO);
+    sockServidor.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-    if(bind(sd, (struct sockaddr *)&sockCliente, sizeof(sockCliente)) == -1){
+    if(bind(sd, (struct sockaddr *)&sockServidor, sizeof(sockServidor)) == -1){
         
         perror("Error en bind\n");
         exit(EXIT_FAILURE);
@@ -111,10 +115,11 @@ int main(){
                 
                 if(clientes[i] == 0){
 
-                    clientes[i] == new_sd;
+                    clientes[i] = new_sd;
+                    estadoClientes[i] = 0;
                     printf("Cliente %d conectado\n", i);
 
-                    char *mensaje = "Usuario conectado\n";
+                    char *mensaje = "[OK] Usuario conectado\n";
                     send(new_sd, mensaje, strlen(mensaje), 0);
                     break;
 
@@ -136,12 +141,49 @@ int main(){
 
                     printf("Cliente %d desconectado\n", i);
                     close(sdCliente);
-                    clientes[i] == 0;
+                    clientes[i] = 0;
+                    estadoClientes[i] = 0;
+                    bzero(nombreClientes[i], 50);
 
                 } else {
 
+                    buffer[strcspn(buffer, "\r\n")] = 0;
                     printf("Mensaje del cliente %d: %s\n", i, buffer);
 
+                    if(strncmp(buffer, "USUARIO", 8) == 0){
+
+                        if(estadoClientes[i] == 0){
+
+                            strcpy(nombreClientes[i], buffer + 8);
+                            estadoClientes[i] = 1;
+                            char *respuesta = "[OK] Usuario correcto\n";
+                            send(sdCliente, respuesta, strlen(respuesta), 0);
+
+                        } else {
+
+                            char *respuesta = "[ERROR] Usuario incorrecto o ya conectado\n";
+                            send(sdCliente, respuesta, strlen(respuesta), 0);
+
+                        }
+                    } else if(strncmp(buffer, "PASSWORD", 9) == 0){
+
+                        if(estadoClientes[i] == 1){
+
+                            estadoClientes[i] == 2;
+                            char *respuesta = "[OK] Usuario validado\n";
+                            send(sdCliente, respuesta, strlen(respuesta), 0);
+
+                        } else {
+
+                            char *respuesta = "[ERROR] Error en la validacion\n";
+                            send(sdCliente, respuesta, strlen(respuesta), 0);
+
+                        }
+                    } else {
+
+                        char *respuesta = "[ERROR] Comando no reconocido\n";
+                        send(sdCliente, respuesta, strlen(respuesta), 0);
+                    }
                 }
             }
         }
