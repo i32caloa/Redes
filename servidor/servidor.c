@@ -10,6 +10,7 @@
 #include <signal.h>
 #include <time.h>
 #include <arpa/inet.h>
+#include "login.h"
 
 #define MAX_CLIENTS 10
 #define PUERTO 2026
@@ -174,15 +175,51 @@ int main(){
 
                         if(estadoClientes[i] == 1){
 
-                            estadoClientes[i] = 2;
-                            char *respuesta = "[OK] Usuario validado\n";
-                            send(sdCliente, respuesta, strlen(respuesta), 0);
+                            char passwd[50];
+                            strcpy(passwd, buffer + 9);
+
+                            if(validarCredenciales(nombreClientes[i], passwd)){
+
+                                estadoClientes[i] = 2;
+                                char *respuesta = "[OK] Usuario validado\n";
+                                send(sdCliente, respuesta, strlen(respuesta), 0);
+
+                            } else {
+
+                                char *respuesta = "[ERROR] Error en la validación";
+                                send(sdCliente, respuesta, strlen(respuesta), 0);
+
+                                estadoClientes[i] = 0;
+                                bzero(nombreClientes[i], 50);
+                            }
 
                         } else {
 
-                            char *respuesta = "[ERROR] Error en la validacion\n";
+                            char *respuesta = "[ERROR] Primero debes indicar el USUARIO\n";
                             send(sdCliente, respuesta, strlen(respuesta), 0);
 
+                        }
+                    } else if(strncmp(buffer, "REGISTRO ", 9) == 0){
+
+                        char user[50];
+                        char pass[50];
+                        
+                        if(sscanf(buffer, "REGISTRO -u %s -p %s", user, pass) == 2) {
+                            if(registrarUsuario(user, pass)) {
+
+                                char *respuesta = "[OK] Usuario registrado correctamente\n";
+                                send(sdCliente, respuesta, strlen(respuesta), 0);
+
+                            } else {
+
+                                char *respuesta = "[ERROR] Fallo al registrar en el fichero\n";
+                                send(sdCliente, respuesta, strlen(respuesta), 0);
+
+                            }
+                        } else {
+
+                            char *respuesta = "[ERROR] Formato de registro incorrecto\n";
+                            send(sdCliente, respuesta, strlen(respuesta), 0);
                         }
                     } else {
 
