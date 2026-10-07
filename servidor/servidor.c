@@ -11,6 +11,7 @@
 #include <time.h>
 #include <arpa/inet.h>
 #include "login.h"
+#include "registro.h"
 
 #define MAX_CLIENTS 10
 #define PUERTO 2026
@@ -160,10 +161,18 @@ int main(){
 
                         if(estadoClientes[i] == 0){
 
-                            strcpy(nombreClientes[i], buffer + 8);
-                            estadoClientes[i] = 1;
-                            char *respuesta = "[OK] Usuario correcto\n";
-                            send(sdCliente, respuesta, strlen(respuesta), 0);
+                            char usuario_temporal[50];
+                            strcpy(usuario_temporal, buffer + 8);
+
+                            if(existeUsuario(usuario_temporal)){
+                                strcpy(nombreClientes[i], usuario_temporal);
+                                estadoClientes[i] = 1;
+                                char *respuesta = "[OK] Usuario correcto\n";
+                                send(sdCliente, respuesta, strlen(respuesta), 0);
+                            } else {
+                                char *respuesta = "[ERROR] El usuario no existe en el sistema\n";
+                                send(sdCliente, respuesta, strlen(respuesta), 0);
+                            }
 
                         } else {
 
@@ -173,56 +182,89 @@ int main(){
                         }
                     } else if(strncmp(buffer, "PASSWORD ", 9) == 0){
 
+                        char passwd[50];
+                        strcpy(passwd, buffer + 9);
+
+                        // CASO A: Contraseña para iniciar sesión
                         if(estadoClientes[i] == 1){
 
-                            char passwd[50];
-                            strcpy(passwd, buffer + 9);
-
                             if(validarCredenciales(nombreClientes[i], passwd)){
-
                                 estadoClientes[i] = 2;
                                 char *respuesta = "[OK] Usuario validado\n";
                                 send(sdCliente, respuesta, strlen(respuesta), 0);
-
                             } else {
-
-                                char *respuesta = "[ERROR] Error en la validación";
+                                char *respuesta = "[ERROR] Error en la validacion\n";
                                 send(sdCliente, respuesta, strlen(respuesta), 0);
-
                                 estadoClientes[i] = 0;
                                 bzero(nombreClientes[i], 50);
                             }
 
+                        } 
+                        // CASO B: Contraseña para eliminar la cuenta (Estado 3)
+                        else if (estadoClientes[i] == 3) {
+                            
+                            if(validarCredenciales(nombreClientes[i], passwd)){
+                                
+                                if(eliminarUsuario(nombreClientes[i], passwd)) {
+                                    char *respuesta = "[OK] Cuenta eliminada. Ya no estas en el sistema.\n";
+                                    send(sdCliente, respuesta, strlen(respuesta), 0);
+                                    
+                                    estadoClientes[i] = 0;
+                                    bzero(nombreClientes[i], 50);
+                                } else {
+                                    char *respuesta = "[ERROR] Fallo en el servidor al eliminar el fichero\n";
+                                    send(sdCliente, respuesta, strlen(respuesta), 0);
+                                    estadoClientes[i] = 2; 
+                                }
+                                
+                            } else {
+                                char *respuesta = "[ERROR] Contraseña incorrecta. Eliminacion cancelada.\n";
+                                send(sdCliente, respuesta, strlen(respuesta), 0);
+                                estadoClientes[i] = 2; 
+                            }
+                            
                         } else {
-
-                            char *respuesta = "[ERROR] Primero debes indicar el USUARIO\n";
+                            char *respuesta = "[ERROR] Primero debes indicar el USUARIO o confirmar operacion\n";
                             send(sdCliente, respuesta, strlen(respuesta), 0);
-
                         }
+
                     } else if(strncmp(buffer, "REGISTRO ", 9) == 0){
 
                         char user[50];
                         char pass[50];
                         
                         if(sscanf(buffer, "REGISTRO -u %s -p %s", user, pass) == 2) {
-                            if(registrarUsuario(user, pass)) {
-
+                            
+                            if (existeUsuario(user)) {
+                                char *respuesta = "[ERROR] El nombre de usuario ya esta en uso\n";
+                                send(sdCliente, respuesta, strlen(respuesta), 0);
+                                
+                            } else if(registrarUsuario(user, pass)) {
                                 char *respuesta = "[OK] Usuario registrado correctamente\n";
                                 send(sdCliente, respuesta, strlen(respuesta), 0);
 
                             } else {
-
                                 char *respuesta = "[ERROR] Fallo al registrar en el fichero\n";
                                 send(sdCliente, respuesta, strlen(respuesta), 0);
-
                             }
                         } else {
-
                             char *respuesta = "[ERROR] Formato de registro incorrecto\n";
                             send(sdCliente, respuesta, strlen(respuesta), 0);
                         }
-                    } else {
 
+                    // NUEVO COMANDO: ELIMINAR
+                    } else if(strncmp(buffer, "ELIMINAR", 8) == 0){
+
+                        if (estadoClientes[i] == 2) {
+                            estadoClientes[i] = 3; 
+                            char *respuesta = "[OK] Vas a borrar tu cuenta. Para confirmar envia: PASSWORD tu_contraseña\n";
+                            send(sdCliente, respuesta, strlen(respuesta), 0);
+                        } else {
+                            char *respuesta = "[ERROR] Debes iniciar sesion antes de eliminar tu cuenta\n";
+                            send(sdCliente, respuesta, strlen(respuesta), 0);
+                        }
+
+                    } else {
                         char *respuesta = "[ERROR] Comando no reconocido\n";
                         send(sdCliente, respuesta, strlen(respuesta), 0);
                     }
