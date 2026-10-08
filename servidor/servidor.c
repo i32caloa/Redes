@@ -12,6 +12,7 @@
 #include <arpa/inet.h>
 #include "login.h"
 #include "registro.h"
+#include "../comun/comun.h"
 
 #define MAX_CLIENTS 10
 #define PUERTO 2026
@@ -28,7 +29,7 @@ int main(){
 
     fd_set readfds;
     int max_sd, activity;
-    char buffer[250];
+    char buffer[MAX_BUFFER];
 
     //Iniciamos el array a 0 para tener hueco libre para que entren los usuarios
 
