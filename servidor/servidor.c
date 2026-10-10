@@ -206,7 +206,6 @@ int main(){
                                                 "--- MENU PRINCIPAL ---\n"
                                                 " Opciones disponibles:\n"
                                                 " - INICIAR-PARTIDA\n"
-                                                " - CHAT\n"
                                                 " - ELIMINAR\n"
                                                 " - SALIR\n"
                                                 "----------------------\n";
@@ -274,7 +273,7 @@ int main(){
 
                         if (estadoClientes[i] == 2) {
                             estadoClientes[i] = 3; 
-                            char *respuesta = "[OK] Vas a borrar tu cuenta. Para confirmar envia: PASSWORD tu_contraseña\n";
+                            char *respuesta = "[OK] Vas a borrar tu cuenta. Para confirmar envia: PASSWORD <contraseña>\n";
                             send(sdCliente, respuesta, strlen(respuesta), 0);
                         } else {
                             char *respuesta = "[ERROR] Debes iniciar sesion antes de eliminar tu cuenta\n";
@@ -284,11 +283,11 @@ int main(){
                     } else if (strncmp(buffer, "HELP", 4) == 0) {
 
                         char *respuesta = "\n--- COMANDOS DISPONIBLES ---\n"
-                                          "USUARIO <nombre>               : Inicia sesion con tu usuario\n"
+                                          "USUARIO <nombre>               : Inicia sesión con tu usuario\n"
                                           "PASSWORD <contraseña>          : Introduce tu contrasena\n"
                                           "REGISTRO -u <nombre> -p <pass> : Registra un nuevo usuario\n"
-                                          "ELIMINAR                       : Elimina tu cuenta (requiere estar logueado)\n"
-                                          "SALIR                          : Desconecta del servidor localmente\n"
+                                          "ELIMINAR                       : Elimina tu cuenta\n"
+                                          "SALIR                          : Desconecta servidor localmente\n"
                                           "----------------------------\n";
                         send(sdCliente, respuesta, strlen(respuesta), 0);
 
