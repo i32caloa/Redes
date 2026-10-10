@@ -3,7 +3,7 @@
 Este proyecto implementa una arquitectura cliente-servidor en C utilizando sockets TCP y la llamada al sistema `select` para la multiplexacion de entrada/salida. El sistema gestiona conexiones concurrentes, autenticacion de usuarios y sentara las bases para un sistema de partidas multijugador.
 
 ## Autores
-* Antonio Cañete
+* Antonio Cañete López
 * Ricardo Izquierdo Muñoz
 
 ## Estructura del Proyecto
