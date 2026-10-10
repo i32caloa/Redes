@@ -31,15 +31,11 @@ int main(){
     int max_sd, activity;
     char buffer[MAX_BUFFER];
 
-    //Iniciamos el array a 0 para tener hueco libre para que entren los usuarios
-
     for(int i = 0; i < MAX_CLIENTS; i++){
         clientes[i] = 0;
         estadoClientes[i] = 0;
         bzero(nombreClientes[i], 50);
     }
-
-    //abrir socket
 
     sd = socket(AF_INET, SOCK_STREAM, 0);
     if(sd == -1){
@@ -47,13 +43,9 @@ int main(){
         exit(EXIT_FAILURE);
     }
 
-    //campos de la estructura, IP siempre 127.0.0.1 ya que es nuestra maquina con linux
-
     sockServidor.sin_family = AF_INET;
     sockServidor.sin_port = htons(PUERTO);
     sockServidor.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-    //añadido ya que el puerto se quedaba activo cada vez q se usaba y habia q limpiarlo, esto hace que libere acada vez q el porgra,a se cierre
 
     int opt = 1;
     setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
@@ -64,8 +56,6 @@ int main(){
         exit(EXIT_FAILURE);
 
     }
-
-    //hablita socket
 
     if(listen(sd, 10) == -1){
 
@@ -164,15 +154,36 @@ int main(){
 
                             char usuario_temporal[50];
                             strcpy(usuario_temporal, buffer + 8);
+                            
+                            int ya_conectado = 0;
+                            
+                            for(int j = 0; j < MAX_CLIENTS; j++){
+                                
+                                if(j != i && estadoClientes[j] > 0 && strcmp(nombreClientes[j], usuario_temporal) == 0){
+                                    
+                                    ya_conectado = 1;
+                                    break;
+                                    
+                                }
+                            }
 
-                            if(existeUsuario(usuario_temporal)){
+                            if(ya_conectado){
+                                
+                                char *respuesta = "[ERROR] Este usuario ya tiene una sesion activa en otro cliente\n";
+                                send(sdCliente, respuesta, strlen(respuesta), 0);
+                                
+                            } else if(existeUsuario(usuario_temporal)){
+                                
                                 strcpy(nombreClientes[i], usuario_temporal);
                                 estadoClientes[i] = 1;
                                 char *respuesta = "[OK] Usuario correcto\n";
                                 send(sdCliente, respuesta, strlen(respuesta), 0);
+                                
                             } else {
+                                
                                 char *respuesta = "[ERROR] El usuario no existe en el sistema\n";
                                 send(sdCliente, respuesta, strlen(respuesta), 0);
+                                
                             }
 
                         } else {
@@ -186,13 +197,21 @@ int main(){
                         char passwd[50];
                         strcpy(passwd, buffer + 9);
 
-                        // CASO A: Contraseña para iniciar sesión
                         if(estadoClientes[i] == 1){
 
                             if(validarCredenciales(nombreClientes[i], passwd)){
                                 estadoClientes[i] = 2;
-                                char *respuesta = "[OK] Usuario validado\n";
+                                
+                                char *respuesta = "[OK] Usuario validado\n"
+                                                "--- MENU PRINCIPAL ---\n"
+                                                " Opciones disponibles:\n"
+                                                " - INICIAR-PARTIDA\n"
+                                                " - CHAT\n"
+                                                " - ELIMINAR\n"
+                                                " - SALIR\n"
+                                                "----------------------\n";
                                 send(sdCliente, respuesta, strlen(respuesta), 0);
+
                             } else {
                                 char *respuesta = "[ERROR] Error en la validacion\n";
                                 send(sdCliente, respuesta, strlen(respuesta), 0);
@@ -200,9 +219,7 @@ int main(){
                                 bzero(nombreClientes[i], 50);
                             }
 
-                        } 
-                        // CASO B: Contraseña para eliminar la cuenta (Estado 3)
-                        else if (estadoClientes[i] == 3) {
+                        } else if(estadoClientes[i] == 3) {
                             
                             if(validarCredenciales(nombreClientes[i], passwd)){
                                 
@@ -253,7 +270,6 @@ int main(){
                             send(sdCliente, respuesta, strlen(respuesta), 0);
                         }
 
-                    // NUEVO COMANDO: ELIMINAR
                     } else if(strncmp(buffer, "ELIMINAR", 8) == 0){
 
                         if (estadoClientes[i] == 2) {
@@ -265,9 +281,22 @@ int main(){
                             send(sdCliente, respuesta, strlen(respuesta), 0);
                         }
 
-                    } else {
-                        char *respuesta = "[ERROR] Comando no reconocido\n";
+                    } else if (strncmp(buffer, "HELP", 4) == 0) {
+
+                        char *respuesta = "\n--- COMANDOS DISPONIBLES ---\n"
+                                          "USUARIO <nombre>               : Inicia sesion con tu usuario\n"
+                                          "PASSWORD <contraseña>          : Introduce tu contrasena\n"
+                                          "REGISTRO -u <nombre> -p <pass> : Registra un nuevo usuario\n"
+                                          "ELIMINAR                       : Elimina tu cuenta (requiere estar logueado)\n"
+                                          "SALIR                          : Desconecta del servidor localmente\n"
+                                          "----------------------------\n";
                         send(sdCliente, respuesta, strlen(respuesta), 0);
+
+                    } else {
+
+                        char *respuesta = "[ERROR] Comando no reconocido. Escribe HELP para ver la lista.\n";
+                        send(sdCliente, respuesta, strlen(respuesta), 0);
+
                     }
                 }
             }
