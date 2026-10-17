@@ -6,7 +6,7 @@ CFLAGS = -Wall
 all: servidor cliente
 
 servidor:
-	$(CC) $(CFLAGS) servidor/servidor.c servidor/login.c servidor/registro.c servidor/juego.c -o servidor/servidor.exe
+	$(CC) $(CFLAGS) servidor/servidor.c servidor/login.c servidor/registro.c servidor/juego.c servidor/comandos.c -o servidor/servidor.exe
 
 cliente:
 	$(CC) $(CFLAGS) cliente/cliente.c -o cliente/cliente.exe

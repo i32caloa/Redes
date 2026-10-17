@@ -135,6 +135,37 @@ int conquistar(Partida* p, int jugador, const char* origen, const char* destino,
 
 }
 
+void comprobar_fin_partida(Partida *p, char *respuesta) {
+    int terr_j1 = 0;
+    int terr_j2 = 0;
+    
+    // Contamos territorios
+    for(int i = 0; i < 5; i++){
+        for(int j = 0; j < 5; j++){
+            if(p->tablero[i][j].user == JUGADOR1) terr_j1++;
+            else if(p->tablero[i][j].user == JUGADOR2) terr_j2++;
+        }
+    }
+    
+    // 1. Alguien pierde todos los territorios
+    if(terr_j1 == 0) {
+        strcat(respuesta, " +Ok. Partida finalizada. Gana el Jugador 2.\n");
+        p->partida_activa = 0;
+    } else if (terr_j2 == 0) {
+        strcat(respuesta, " +Ok. Partida finalizada. Gana el Jugador 1.\n");
+        p->partida_activa = 0;
+    } else if (p->num_turno > MAX_TURNOS) {
+        if(terr_j1 > terr_j2) {
+            strcat(respuesta, " +Ok. Limite de turnos. Gana Jugador 1.\n");
+        } else if(terr_j2 > terr_j1) {
+            strcat(respuesta, " +Ok. Limite de turnos. Gana Jugador 2.\n");
+        } else {
+            strcat(respuesta, " +Ok. Limite de turnos. Empate.\n");
+        }
+        p->partida_activa = 0;
+    }
+}
+
 int atacar(Partida *p, int jugador, const char* origen, const char* destino, int unidades, char* respuesta){
     int f_origen, f_destino, c_origen, c_destino;
     if(!convertir_coordenadas(origen, &f_origen, &c_origen) || !convertir_coordenadas(destino, &f_destino, &c_destino)){
