@@ -8,7 +8,7 @@
 void iniciar_partida(Partida *p){
     for(int i = 0; i<5; i++){
         for(int j = 0; j<5; j++){
-            p->tablero[i][j].dueño = NEUTRAL;
+            p->tablero[i][j].user = NEUTRAL;
             p->tablero[i][j].unidades = 0;
         }
     }
@@ -27,10 +27,10 @@ void iniciar_partida(Partida *p){
         c2 = rand() % 5;
     }while(f1 == f2 && c1 == c2);
 
-    p->tablero[f1][c1].dueño = JUGADOR1;
+    p->tablero[f1][c1].user = JUGADOR1;
     p->tablero[f1][c1].unidades = 30;
 
-    p->tablero[f2][c2].dueño = JUGADOR2;
+    p->tablero[f2][c2].user = JUGADOR2;
     p->tablero[f2][c2].unidades = 30;
 
     p->turno_actual = 1; //Empieza el J1
@@ -82,14 +82,14 @@ void obtener_estado(Partida *p, int jugador, char* salida){
         strcat(temp, linea);
         for(int j = 0; j<5; j++){
             char celda[32];
-            if(p->tablero[i][j].dueño == NEUTRAL){
+            if(p->tablero[i][j].user == NEUTRAL){
                 sprintf(celda, "|  -   ");
             }
-            else if(p->tablero[i][j].dueño == jugador){
-                sprintf(celda, "| J%d(%d)", p->tablero[i][j].dueño, p->tablero[i][j].unidades);
+            else if(p->tablero[i][j].user == jugador){
+                sprintf(celda, "| J%d(%d)", p->tablero[i][j].user, p->tablero[i][j].unidades);
             }
             else{
-                sprintf(celda, "| J%d   ", p->tablero[i][j].dueño);
+                sprintf(celda, "| J%d   ", p->tablero[i][j].user);
             }
             strcat(temp, celda);
         }
@@ -109,11 +109,11 @@ int conquistar(Partida* p, int jugador, const char* origen, const char* destino,
         strcpy(respuesta, "-Err. No es tu turno\n");
         return 0;
     }
-    if(p->tablero[f_origen][c_origen].dueño != jugador){
+    if(p->tablero[f_origen][c_origen].user != jugador){
         strcpy(respuesta, "-Err. El territorio de origen no te pertenece\n");
         return 0;
     }
-    if(p->tablero[f_destino][c_destino].dueño != NEUTRAL){
+    if(p->tablero[f_destino][c_destino].user != NEUTRAL){
         strcpy(respuesta, "-Err. El territorio ya está ocupado\n");
         return 0;
     }
@@ -127,7 +127,7 @@ int conquistar(Partida* p, int jugador, const char* origen, const char* destino,
     }
 
     p->tablero[f_origen][c_origen].unidades -= unidades;
-    p->tablero[f_destino][c_destino].dueño = jugador;
+    p->tablero[f_destino][c_destino].user = jugador;
     p->tablero[f_destino][c_destino].unidades = unidades;
 
     sprintf(respuesta, "+Ok. Territorio %s conquistado\n", destino);
@@ -145,7 +145,7 @@ int atacar(Partida *p, int jugador, const char* origen, const char* destino, int
         strcpy(respuesta, "-Err. No es tu turno\n");
         return 0;
     }
-    if(p->tablero[f_origen][c_origen].dueño != jugador){
+    if(p->tablero[f_origen][c_origen].user != jugador){
         strcpy(respuesta, "-Err. El territorio de origen no te pertenece\n");
         return 0;
     }
@@ -157,7 +157,7 @@ int atacar(Partida *p, int jugador, const char* origen, const char* destino, int
         strcpy(respuesta, "-Err. No dispones de suficientes unidades\n");
         return 0;
     }
-    if(p->tablero[f_destino][c_destino].dueño == jugador || p->tablero[f_destino][c_destino].dueño == NEUTRAL){
+    if(p->tablero[f_destino][c_destino].user == jugador || p->tablero[f_destino][c_destino].user == NEUTRAL){
         strcpy(respuesta, "-Err. El territorio seleccionado no es enemigo\n");
         return 0;
     }
@@ -165,7 +165,7 @@ int atacar(Partida *p, int jugador, const char* origen, const char* destino, int
     int unidades_defensor = p->tablero[f_destino][c_destino].unidades;
     p->tablero[f_origen][c_origen].unidades -= unidades;
     if(unidades >= unidades_defensor){
-        p->tablero[f_destino][c_destino].dueño = jugador;
+        p->tablero[f_destino][c_destino].user = jugador;
         p->tablero[f_destino][c_destino].unidades = unidades;
         sprintf(respuesta, "+Ok. Territorio %s conquistado\n", destino);
     }
@@ -186,7 +186,7 @@ int reforzar(Partida* p, int jugador, const char* origen, const char* destino, i
         strcpy(respuesta, "-Err. No es tu turno\n");
         return 0;
     }
-    if(p->tablero[f_origen][c_origen].dueño != jugador){
+    if(p->tablero[f_origen][c_origen].user != jugador){
         strcpy(respuesta, "-Err. El territorio de origen no te pertenece\n");
         return 0;
     }
@@ -198,7 +198,7 @@ int reforzar(Partida* p, int jugador, const char* origen, const char* destino, i
         strcpy(respuesta, "-Err. No dispones de suficientes unidades\n");
         return 0;
     }
-    if(p->tablero[f_destino][c_destino].dueño != jugador){
+    if(p->tablero[f_destino][c_destino].user != jugador){
         strcpy(respuesta, "-Err. El territorio seleccionado no te pertenece\n");
         return 0;
     }
@@ -228,26 +228,4 @@ int pasar_turno(Partida *p, int jugador, char* respuesta){
         strcpy(respuesta, "+Ok. Turno finalizado\n");
     }
     return 1;
-}
-
-int main(){
-    Partida partida;
-    char buffer_estado[1024];
-
-    // Inicializamos la partida (colocará J1 y J2 de forma aleatoria con 30 unidades)
-    iniciar_partida(&partida);
-
-    printf("=== PRUEBA DE VISUALIZACION DEL TABLERO ===\n\n");
-
-    // Mostrar el tablero desde la perspectiva del JUGADOR 1
-    printf("--- Vista desde el JUGADOR 1 ---\n");
-    obtener_estado(&partida, 1, buffer_estado);
-    printf("%s\n", buffer_estado);
-
-    // Mostrar el tablero desde la perspectiva del JUGADOR 2
-    printf("--- Vista desde el JUGADOR 2 ---\n");
-    obtener_estado(&partida, 2, buffer_estado);
-    printf("%s\n", buffer_estado);
-
-    return 0;
 }

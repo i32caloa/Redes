@@ -7,10 +7,10 @@ typedef enum{
     NEUTRAL = 0,
     JUGADOR1 = 1,
     JUGADOR2 = 2
-} Dueño;
+}User;
 
 typedef struct{
-    Dueño dueño;
+    User user;
     int unidades;
 }Territorio;
 
@@ -20,5 +20,12 @@ typedef struct{
     int num_turno; //Contador de los turnos
     int partida_activa;
 }Partida;
+
+void iniciar_partida(Partida *p);
+void obtener_estado(Partida *p, int jugador, char *salida);
+int conquistar(Partida *p, int jugador, const char *origen, const char *destino, int unidades, char *respuesta);
+int atacar(Partida *p, int jugador, const char *origen, const char *destino, int unidades, char *respuesta);
+int reforzar(Partida *p, int jugador, const char *origen, const char *destino, int unidades, char *respuesta);
+int pasar_turno(Partida *p, int jugador, char *respeusta);
 
 #endif
