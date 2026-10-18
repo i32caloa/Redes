@@ -45,6 +45,7 @@ Una vez el cliente esta conectado, el sistema responde a comandos en texto plano
 
 * `USUARIO <nombre>`: Inicia el proceso de autenticacion con un nombre de usuario.
 * `PASSWORD <contrasena>`: Introduce la contrasena para validar el login o confirmar el borrado de cuenta.
-* `REGISTRO -u <nombre> -p <contrasena>`: Crea un nuevo usuario en la base de datos del servidor.
+* `REGISTRO <nombre> <contrasena>`: Crea un nuevo usuario en la base de datos del servidor.
 * `HELP`: Muestra la lista de comandos y su funcionamiento.
+* `INICIAR-PARTIDA`: Comienza el emparejamiento a la espera de otro cliente.
 * `SALIR`: Cierra la conexion y termina el proceso del cliente.
