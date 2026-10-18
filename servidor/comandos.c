@@ -100,23 +100,6 @@ void procesar_mensaje(int i, char *buffer, EstadoServidor *srv){
                 srv->estadoClientes[i] = 0;
                 bzero(srv->nombreClientes[i], 50);
             }
-        } else if(srv->estadoClientes[i] == 3){
-            if(validarCredenciales(srv->nombreClientes[i], passwd)){
-                if(eliminarUsuario(srv->nombreClientes[i], passwd)){
-                    char *respuesta = "+Ok. Cuenta eliminada. Ya no estas en el sistema.\n";
-                    send(sdCliente, respuesta, strlen(respuesta), 0);
-                    srv->estadoClientes[i] = 0;
-                    bzero(srv->nombreClientes[i], 50);
-                } else {
-                    char *respuesta = "-Err. Fallo en el servidor al eliminar el fichero\n";
-                    send(sdCliente, respuesta, strlen(respuesta), 0);
-                    srv->estadoClientes[i] = 2; 
-                }
-            } else {
-                char *respuesta = "-Err. Contraseña incorrecta. Eliminacion cancelada.\n";
-                send(sdCliente, respuesta, strlen(respuesta), 0);
-                srv->estadoClientes[i] = 2; 
-            }
         } else {
             char *respuesta = "-Err. Primero debes indicar el USUARIO o confirmar operacion\n";
             send(sdCliente, respuesta, strlen(respuesta), 0);
@@ -125,11 +108,11 @@ void procesar_mensaje(int i, char *buffer, EstadoServidor *srv){
     } else if(strncmp(buffer, "REGISTRO ", 9) == 0){
         char user[50];
         char pass[50];
-        char extra[50]; // eliminar basura
+        char extra[50]; 
         
         int leidos = sscanf(buffer, "REGISTRO %s %s %s", user, pass, extra);
         
-        if(leidos == 2 && strcmp(user, "-u") != 0){
+        if(leidos == 2 && strcmp(user, "-u") != 0 && strcmp(user, "-p") != 0){
             if(existeUsuario(user)){
                 char *respuesta = "-Err. El nombre de usuario ya esta en uso\n";
                 send(sdCliente, respuesta, strlen(respuesta), 0);
@@ -253,6 +236,20 @@ void procesar_mensaje(int i, char *buffer, EstadoServidor *srv){
                         }
                     }
                 }
+
+                // Condición de victoria: si la partida termina, expulsa al menú
+                if(srv->partidas[id_partida].partida_activa == 0){
+                    srv->estadoClientes[i] = 2;
+                    srv->clientePartida[i] = -1;
+                    srv->numeroJugador[i] = -1;
+                    for(int j = 0; j < MAX_CLIENTS; j++){
+                        if(j != i && srv->estadoClientes[j] == 5 && srv->clientePartida[j] == id_partida){
+                            srv->estadoClientes[j] = 2;
+                            srv->clientePartida[j] = -1;
+                            srv->numeroJugador[j] = -1;
+                        }
+                    }
+                }
             } else {
                 char *respuesta = "-Err. Formato incorrecto. Uso: ATACAR origen destino unidades\n";
                 send(sdCliente, respuesta, strlen(respuesta), 0);
@@ -296,8 +293,29 @@ void procesar_mensaje(int i, char *buffer, EstadoServidor *srv){
             if(strncmp(respuesta_juego, "+Ok", 3) == 0){
                 for(int j = 0; j < MAX_CLIENTS; j++){
                     if(j != i && srv->estadoClientes[j] == 5 && srv->clientePartida[j] == id_partida){
-                        char *aviso = "+Ok. El oponente ha pasado. Es tu turno.\n";
-                        send(srv->clientes[j], aviso, strlen(aviso), 0);
+                        // Si la partida terminó, avisa el resultado. Si sigue activa, da el turno.
+                        if (srv->partidas[id_partida].partida_activa == 0) {
+                            char aviso[300];
+                            sprintf(aviso, "+Ok. El oponente ha pasado. Resultado: %s", respuesta_juego);
+                            send(srv->clientes[j], aviso, strlen(aviso), 0);
+                        } else {
+                            char *aviso = "+Ok. El oponente ha pasado. Es tu turno.\n";
+                            send(srv->clientes[j], aviso, strlen(aviso), 0);
+                        }
+                    }
+                }
+            }
+
+            // Condición de victoria: si la partida termina por límite de turnos, expulsa al menú
+            if(srv->partidas[id_partida].partida_activa == 0){
+                srv->estadoClientes[i] = 2;
+                srv->clientePartida[i] = -1;
+                srv->numeroJugador[i] = -1;
+                for(int j = 0; j < MAX_CLIENTS; j++){
+                    if(j != i && srv->estadoClientes[j] == 5 && srv->clientePartida[j] == id_partida){
+                        srv->estadoClientes[j] = 2;
+                        srv->clientePartida[j] = -1;
+                        srv->numeroJugador[j] = -1;
                     }
                 }
             }
@@ -312,15 +330,14 @@ void procesar_mensaje(int i, char *buffer, EstadoServidor *srv){
     } else if(strncmp(buffer, "HELP", 4) == 0){
         char *respuesta = "\n--- COMANDOS DISPONIBLES ---\n"
                           "USUARIO <nombre>               : Inicia sesion con tu usuario\n"
-                          "PASSWORD <contraseña>          : Introduce tu contrasena\n"
-                          "REGISTRO -u <nombre> -p <pass> : Registra un nuevo usuario\n"
+                          "PASSWORD <contrasena>          : Introduce tu contrasena\n"
+                          "REGISTRO usuario password      : Registra un nuevo usuario\n"
                           "INICIAR-PARTIDA                : Entra en la cola de juego\n"
                           "ESTADO                         : Ver tablero (solo en partida)\n"
                           "CONQUISTAR origen destino unid : Conquista territorio (solo en partida)\n"
                           "ATACAR origen destino unid     : Ataca territorio (solo en partida)\n"
                           "REFORZAR origen destino unid   : Refuerza territorio (solo en partida)\n"
                           "PASAR                          : Pasa turno (solo en partida)\n"
-                          "ELIMINAR                       : Elimina tu cuenta\n"
                           "SALIR                          : Cierra sesion y desconecta\n"
                           "----------------------------\n";
         send(sdCliente, respuesta, strlen(respuesta), 0);
