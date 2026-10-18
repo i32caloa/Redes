@@ -1,21 +1,21 @@
-# Proyecto de Redes: Sistema Cliente-Servidor TCP
+# Práctica 2 Redes: Dominio Territorial
 
-Este proyecto implementa una arquitectura cliente-servidor en C utilizando sockets TCP y la llamada al sistema `select` para la multiplexacion de entrada/salida. El sistema gestiona conexiones concurrentes, autenticacion de usuarios y sentara las bases para un sistema de partidas multijugador.
+Este proyecto implementa una arquitectura cliente-servidor en C utilizando sockets TCP y la llamada al sistema `select` para la multiplexación de entrada/salida. El sistema gestiona conexiones concurrentes, autenticación de usuarios y ejecuta un sistema de partidas multijugador por turnos (Dominio Territorial).
 
 ## Autores
-* Antonio Cañete López
-* Ricardo Izquierdo Muñoz
+- Antonio Cañete López
+- Ricardo Izquierdo Muñoz
 
 ## Estructura del Proyecto
-El codigo fuente esta dividido en directorios modulares para separar la logica:
-* `/servidor`: Contiene el codigo principal del servidor, asi como los modulos de login, registro, juego, comandos y gestion de ficheros (`usuarios.txt`).
-* `/cliente`: Contiene el codigo del cliente TCP.
-* `/comun`: Contiene las cabeceras compartidas (puertos, tamaños de buffer) para asegurar la sincronizacion entre cliente y servidor.
+El código fuente está dividido en directorios modulares para separar la lógica de red de la lógica de negocio:
+- `/servidor`: Contiene el código principal de red (`servidor.c`), el enrutador de peticiones (`comandos.c`), el motor del tablero (`juego.c`), los módulos de autenticación (`login.c`, `registro.c`) y la base de datos de texto (`usuarios.txt`).
+- `/cliente`: Contiene el código del cliente TCP.
+- `/comun`: Contiene las cabeceras compartidas (puertos, tamaños de buffer) para asegurar la sincronización entre cliente y servidor.
 
-## Compilacion
-El proyecto cuenta con un archivo Makefile en la raiz para facilitar la compilacion.
+## Compilación
+El proyecto cuenta con un archivo Makefile en la raíz para facilitar la compilación unificada.
 
-Para compilar tanto el servidor como el cliente, ejecuta en la raiz del proyecto:
+Para compilar tanto el servidor como el cliente, ejecuta en la raíz del proyecto:
 ```bash
 make
 ```
