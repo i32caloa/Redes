@@ -8,7 +8,7 @@ Este proyecto implementa una arquitectura cliente-servidor en C utilizando socke
 
 ## Estructura del Proyecto
 El codigo fuente esta dividido en directorios modulares para separar la logica:
-* `/servidor`: Contiene el codigo principal del servidor, asi como los modulos de login, registro y gestion de ficheros (`usuarios.txt`).
+* `/servidor`: Contiene el codigo principal del servidor, asi como los modulos de login, registro, juego, comandos y gestion de ficheros (`usuarios.txt`).
 * `/cliente`: Contiene el codigo del cliente TCP.
 * `/comun`: Contiene las cabeceras compartidas (puertos, tamaños de buffer) para asegurar la sincronizacion entre cliente y servidor.
 
@@ -46,6 +46,5 @@ Una vez el cliente esta conectado, el sistema responde a comandos en texto plano
 * `USUARIO <nombre>`: Inicia el proceso de autenticacion con un nombre de usuario.
 * `PASSWORD <contrasena>`: Introduce la contrasena para validar el login o confirmar el borrado de cuenta.
 * `REGISTRO -u <nombre> -p <contrasena>`: Crea un nuevo usuario en la base de datos del servidor.
-* `ELIMINAR`: Inicia el proceso para borrar la cuenta activa (requiere estar validado).
 * `HELP`: Muestra la lista de comandos y su funcionamiento.
 * `SALIR`: Cierra la conexion y termina el proceso del cliente.
