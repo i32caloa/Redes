@@ -55,7 +55,6 @@ int main(){
 
         }
 
-        // 1. Recibir mensajes del servidor
         if(FD_ISSET(sd, &readfds)){
             
             memset(buffer, 0, sizeof(buffer));
@@ -71,7 +70,6 @@ int main(){
             printf("%s\n", buffer);
         }
 
-        // 2. Escribir comandos crudos por teclado
         if(FD_ISSET(0, &readfds)){
 
             memset(buffer, 0, sizeof(buffer));
