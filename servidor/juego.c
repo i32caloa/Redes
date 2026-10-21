@@ -174,7 +174,7 @@ void comprobar_fin_partida(Partida *p, char *respuesta){
             strcat(respuesta, " +Ok. Limite de turnos. Gana Jugador 2.\n");
         } else {
             strcat(respuesta, " +Ok. Limite de turnos. Empate.\n");
-            printf("SALIENDO DE PARTIDA.........\n")
+            printf("SALIENDO DE PARTIDA.........\n");
         }
         p->partida_activa = 0;
     } else {
